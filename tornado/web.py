@@ -365,7 +365,7 @@ class RequestHandler(object):
         # If \n is allowed into the header, it is possible to inject
         # additional headers or split the request. Also cap length to
         # prevent obviously erroneous values.
-        if (len(value) > 4000 or
+        if (len(value) > 16384 or
                 RequestHandler._INVALID_HEADER_CHAR_RE.search(value)):
             raise ValueError("Unsafe header value %r", value)
         return value
