@@ -1,0 +1,39 @@
+Source: tornado
+Maintainer: Facebook <python-tornado@googlegroups.com>
+Section: python
+Priority: optional
+Build-Depends:
+  debhelper (>= 9),
+  python-dev,
+  python3-dev,
+  dh-python,
+  python-setuptools,
+  python3-setuptools,
+  python-pycurl,
+  python3-pycurl,
+  python-singledispatch,
+  python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
+  python-certifi
+Standards-Version: 3.9.5
+X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.4
+
+Package: python-tornado
+Architecture: all
+Depends:
+  ${python:Depends},
+  python,
+  python-pycurl,
+  python-certifi,
+  python-singledispatch,
+  python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
+Description: Tornado
+
+Package: python3-tornado
+Architecture: all
+Depends:
+  ${python3:Depends},
+  python3,
+  python3-pycurl,
+  python3-certifi,
+Description: Tornado for Python 3

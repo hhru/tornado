@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = tornado
+
+%:
+	dh $@ --with python3,python2 --buildsystem=pybuild
+
+override_dh_auto_test:
+	./runtests.sh || exit 1
