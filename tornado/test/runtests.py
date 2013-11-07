@@ -42,7 +42,8 @@ TEST_MODULES = [
     'tornado.test.stack_context_test',
     'tornado.test.template_test',
     'tornado.test.testing_test',
-    'tornado.test.twisted_test',
+    # This test fails without Twisted installation, fixed in 4.0
+    # 'tornado.test.twisted_test',
     'tornado.test.util_test',
     'tornado.test.web_test',
     'tornado.test.websocket_test',
