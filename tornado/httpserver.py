@@ -43,11 +43,6 @@ from tornado import stack_context
 from tornado.util import bytes_type
 from tornado import options
 
-try:
-    import Cookie  # py2
-except ImportError:
-    import http.cookies as Cookie  # py3
-
 
 class HTTPServer(TCPServer):
     r"""A non-blocking, single-threaded HTTP server.
@@ -509,13 +504,9 @@ class HTTPRequest(object):
     def cookies(self):
         """A dictionary of Cookie.Morsel objects."""
         if not hasattr(self, "_cookies"):
-            self._cookies = Cookie.SimpleCookie()
+            self._cookies = httputil.SimpleCookie()
             if "Cookie" in self.headers:
-                try:
-                    self._cookies.load(
-                        native_str(self.headers["Cookie"]))
-                except Exception:
-                    self._cookies = {}
+                self._cookies.load(native_str(self.headers["Cookie"]))
         return self._cookies
 
     def write(self, chunk, callback=None):

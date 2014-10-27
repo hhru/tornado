@@ -49,11 +49,6 @@ except ImportError:
     from cStringIO import StringIO as BytesIO  # python 2
 
 try:
-    import Cookie  # py2
-except ImportError:
-    import http.cookies as Cookie  # py3
-
-try:
     import urllib.parse as urllib_parse  # py3
 except ImportError:
     import urllib as urllib_parse
@@ -191,7 +186,7 @@ class HTTPRequest(object):
     def cookies(self):
         """A dictionary of Cookie.Morsel objects."""
         if not hasattr(self, "_cookies"):
-            self._cookies = Cookie.SimpleCookie()
+            self._cookies = httputil.SimpleCookie()
             if "Cookie" in self.headers:
                 try:
                     self._cookies.load(
