@@ -30,6 +30,8 @@ import socket
 import ssl
 import time
 import copy
+import urllib
+import urlparse
 
 from tornado.escape import native_str, parse_qs_bytes
 from tornado import httputil
@@ -39,11 +41,7 @@ from tornado import netutil
 from tornado.tcpserver import TCPServer
 from tornado import stack_context
 from tornado.util import bytes_type
-
-try:
-    import Cookie  # py2
-except ImportError:
-    import http.cookies as Cookie  # py3
+from tornado import options
 
 
 class HTTPServer(TCPServer):
@@ -163,7 +161,12 @@ class _BadRequestException(Exception):
     pass
 
 
+
+
 class HTTPConnection(object):
+
+    _header_safe = ''.join(chr(i) for i in range(128))
+
     """Handles a connection to an HTTP client, executing HTTP requests.
 
     We parse HTTP headers and bodies, and execute the request callback
@@ -289,7 +292,22 @@ class HTTPConnection(object):
 
     def _on_headers(self, data):
         try:
-            data = native_str(data.decode('latin1'))
+            if options.options.disable_hh_patches:
+                data = native_str(data.decode('latin1'))
+            else:
+                decoded_headers = None
+                for enc in ('ascii', 'cp1251', 'utf-8'):
+                    try:
+                        decoded_headers = data.decode(enc)
+                        break
+                    except UnicodeDecodeError:
+                        continue
+
+                if decoded_headers is None:
+                    raise _BadRequestException("Invalid encoding in headers")
+
+                data = urllib.quote(native_str(decoded_headers), safe=self._header_safe)
+
             eol = data.find("\r\n")
             start_line = data[:eol]
             try:
@@ -486,13 +504,9 @@ class HTTPRequest(object):
     def cookies(self):
         """A dictionary of Cookie.Morsel objects."""
         if not hasattr(self, "_cookies"):
-            self._cookies = Cookie.SimpleCookie()
+            self._cookies = httputil.SimpleCookie()
             if "Cookie" in self.headers:
-                try:
-                    self._cookies.load(
-                        native_str(self.headers["Cookie"]))
-                except Exception:
-                    self._cookies = {}
+                self._cookies.load(native_str(self.headers["Cookie"]))
         return self._cookies
 
     def write(self, chunk, callback=None):

@@ -139,6 +139,7 @@ def watch(filename):
 
     All imported modules are watched by default.
     """
+    gen_log.debug('watching file "%s" for changes', filename)
     _watched_files.add(filename)
 
 
