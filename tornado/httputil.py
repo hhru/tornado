@@ -29,6 +29,7 @@ from tornado.escape import native_str, parse_qs_bytes, utf8
 from tornado.log import gen_log
 from tornado.util import ObjectDict
 
+
 try:
     from httplib import responses  # py2
 except ImportError:
@@ -44,7 +45,8 @@ except ImportError:
     from urllib.parse import urlencode  # py3
 
 
-from tornado.cookie import SimpleCookie
+import tornado.cookie
+SimpleCookie = tornado.cookie.SimpleCookie
 
 
 class _NormalizedHeaderCache(dict):
