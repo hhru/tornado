@@ -1,3 +1,13 @@
+tornado (3.2.2+hh3) unstable; urgency=low
+
+  * HH-51907 Always close curl socket
+  * HH-46051 fix bug in SimpleCookie
+  * HH-40589 fail-proof headers decoding
+  * HH-35189 set header length cap to a more appropriate value
+  * HH-28175 force curls to make fresh connections every time
+
+ -- Automated Build <d.smirnov@hh.ru>  Mon, 27 Apr 2015 13:30:21 +0300
+
 tornado (3.2.2+hh2) unstable; urgency=low
 
   * Tornado 3 release
