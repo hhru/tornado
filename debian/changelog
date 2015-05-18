@@ -1,3 +1,11 @@
+tornado (3.2.2+hh4) unstable; urgency=low
+
+  * HH-51422 remove redundant cookies
+  * HH-51422 add variable to export
+  * HH-51422 fix error when two bad cookies in request
+
+ -- Automated Build <a.inozemtsev@hh.ru>  Mon, 18 May 2015 15:27:02 +0300
+
 tornado (3.2.2+hh3) unstable; urgency=low
 
   * HH-51907 Always close curl socket
