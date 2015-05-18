@@ -29,15 +29,11 @@ from tornado.escape import native_str, parse_qs_bytes, utf8
 from tornado.log import gen_log
 from tornado.util import ObjectDict
 
+
 try:
     from httplib import responses  # py2
 except ImportError:
     from http.client import responses  # py3
-
-try:
-    import Cookie  # py2
-except ImportError:
-    import http.cookies as Cookie  # py3
 
 # responses is unused in this file, but we re-export it to other files.
 # Reference it so pyflakes doesn't complain.
@@ -49,38 +45,8 @@ except ImportError:
     from urllib.parse import urlencode  # py3
 
 
-_tc = Cookie.SimpleCookie()
-try:
-    _tc.load(str('foo:bar=1'))
-    _cookie_allows_colon_in_names = True
-except Cookie.CookieError:
-    _cookie_allows_colon_in_names = False
-
-if _cookie_allows_colon_in_names:
-    SimpleCookie = Cookie.SimpleCookie
-else:
-    class SimpleCookie(Cookie.SimpleCookie):
-        """A dictionary of Cookie.Morsel objects.
-
-        Due the bug in Cookie module (http://bugs.python.org/issue2193) colon in cookie's name
-        will throw an exception in Python < 3.3. We do not want to miss all the cookies when one of them is invalid.
-        """
-        def load(self, rawdata):
-            self.bad_cookies = []
-            self._BaseCookie__set = self._loose_set
-            Cookie.SimpleCookie.load(self, rawdata)
-            self._BaseCookie__set = self._strict_set
-            for key in self.bad_cookies:
-                del self[key]
-
-        _strict_set = Cookie.BaseCookie._BaseCookie__set
-
-        def _loose_set(self, key, real_value, coded_value):
-            try:
-                self._strict_set(key, real_value, coded_value)
-            except Cookie.CookieError:
-                self.bad_cookies.append(key)
-                dict.__setitem__(self, key, None)
+import tornado.cookie
+SimpleCookie = tornado.cookie.SimpleCookie
 
 
 class _NormalizedHeaderCache(dict):
