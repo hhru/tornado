@@ -2050,3 +2050,17 @@ class XSRFTest(SimpleHandlerTestCase):
                 body=urllib_parse.urlencode(dict(_xsrf=body_token)),
                 headers=self.cookie_headers(cookie_token))
             self.assertEqual(response.code, 200)
+
+    def test_xsrf_fail_malformed_body(self):
+        with ExpectLog(gen_log, ".*'_xsrf' argument missing"):
+            response = self.fetch(
+                "/", method="POST", body=b"_xsrf=null",
+                headers=self.cookie_headers())
+        self.assertEqual(response.code, 403)
+
+    def test_xsrf_fail_malformed_header(self):
+        with ExpectLog(gen_log, ".*'_xsrf' argument missing"):
+            response = self.fetch(
+                "/", method="POST", body=b"", headers=dict({"X-Xsrftoken": b"null"},
+                                                           **self.cookie_headers()))
+        self.assertEqual(response.code, 403)

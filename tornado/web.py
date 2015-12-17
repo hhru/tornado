@@ -1110,10 +1110,9 @@ class RequestHandler(object):
         """
         if not hasattr(self, '_raw_xsrf_token'):
             cookie = self.get_cookie("_xsrf")
-            if cookie:
-                version, token, timestamp = self._decode_xsrf_token(cookie)
-            else:
-                version, token, timestamp = None, None, None
+
+            version, token, timestamp = self._decode_xsrf_token(cookie)
+
             if token is None:
                 version = None
                 token = os.urandom(16)
@@ -1125,6 +1124,9 @@ class RequestHandler(object):
         """Convert a cookie string into a the tuple form returned by
         _get_raw_xsrf_token.
         """
+        if cookie is None:
+            return None, None, None
+
         m = _signed_value_version_re.match(utf8(cookie))
         if m:
             version = int(m.group(1))
@@ -1175,10 +1177,13 @@ class RequestHandler(object):
         token = (self.get_argument("_xsrf", None) or
                  self.request.headers.get("X-Xsrftoken") or
                  self.request.headers.get("X-Csrftoken"))
-        if not token:
-            raise HTTPError(403, "'_xsrf' argument missing from POST")
+
         _, token, _ = self._decode_xsrf_token(token)
         _, expected_token, _ = self._get_raw_xsrf_token()
+
+        if token is None:
+            raise HTTPError(403, "'_xsrf' argument missing from POST or malformed")
+
         if not _time_independent_equals(utf8(token), utf8(expected_token)):
             raise HTTPError(403, "XSRF cookie does not match POST argument")
 
