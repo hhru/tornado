@@ -1,3 +1,9 @@
+tornado (3.2.2+hh5) unstable; urgency=low
+
+  * HH-57168 return 403 on malformed XSRF token
+
+ -- Automated Build <a.inozemtsev@hh.ru>  Thu, 17 Dec 2015 17:05:41 +0300
+
 tornado (3.2.2+hh4) unstable; urgency=low
 
   * HH-51422 remove redundant cookies
