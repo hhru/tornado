@@ -30,8 +30,11 @@ import socket
 import ssl
 import time
 import copy
-import urllib
-import urlparse
+
+try:
+    from urllib import quote  # py2
+except ImportError:
+    from urllib.parse import quote  # py3
 
 from tornado.escape import native_str, parse_qs_bytes
 from tornado import httputil
@@ -306,7 +309,7 @@ class HTTPConnection(object):
                 if decoded_headers is None:
                     raise _BadRequestException("Invalid encoding in headers")
 
-                data = urllib.quote(native_str(decoded_headers), safe=self._header_safe)
+                data = quote(native_str(decoded_headers), safe=self._header_safe)
 
             eol = data.find("\r\n")
             start_line = data[:eol]
