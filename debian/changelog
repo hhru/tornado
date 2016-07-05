@@ -1,3 +1,9 @@
+tornado (3.2.2+hh6) unstable; urgency=low
+
+  * Bump version up to 3.2.2+hh6
+
+ -- Automated Build <an.sumin@hh.ru>  Tue, 05 Jul 2016 15:50:13 +0300
+
 tornado (3.2.2+hh5) unstable; urgency=low
 
   * HH-57168 return 403 on malformed XSRF token
