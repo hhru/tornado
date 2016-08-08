@@ -465,11 +465,6 @@ def _curl_setup_request(curl, request, buffer, headers):
     if request.prepare_curl_callback is not None:
         request.prepare_curl_callback(curl)
 
-    #fixing big problem with wrong responses transfer from failed reqs to new ones
-    curl.setopt(pycurl.FRESH_CONNECT, 1)
-    # always close socket after response
-    curl.setopt(pycurl.FORBID_REUSE, 1)
-
 
 def _curl_header_callback(headers, header_line):
     # header_line as returned by curl includes the end-of-line characters.
