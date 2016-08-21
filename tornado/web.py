@@ -81,7 +81,10 @@ from tornado.log import access_log, app_log, gen_log
 from tornado import stack_context
 from tornado import template
 from tornado.escape import utf8, _unicode
-from tornado.util import bytes_type, import_object, ObjectDict, raise_exc_info, unicode_type, _websocket_mask
+from tornado.routing import SimpleRegexRouter, URLSpec
+from tornado.util import bytes_type, ObjectDict, raise_exc_info, unicode_type, _websocket_mask
+
+url = URLSpec
 
 try:
     from io import BytesIO  # python 3
@@ -1630,8 +1633,8 @@ class Application(object):
             self.transforms.append(ChunkedTransferEncoding)
         else:
             self.transforms = transforms
-        self.handlers = []
-        self.named_handlers = {}
+        self.default_router = SimpleRegexRouter(self)
+        self.routers = [self.default_router]
         self.default_host = default_host
         self.settings = settings
         self.ui_modules = {'linkify': _linkify,
@@ -1689,52 +1692,20 @@ class Application(object):
         server = HTTPServer(self, **kwargs)
         server.listen(port, address)
 
+    def add_router(self, router):
+        self.routers.append(router)
+
     def add_handlers(self, host_pattern, host_handlers):
-        """Appends the given handlers to our handler list.
-
-        Host patterns are processed sequentially in the order they were
-        added. All matching patterns will be considered.
-        """
-        if not host_pattern.endswith("$"):
-            host_pattern += "$"
-        handlers = []
-        # The handlers with the wildcard host_pattern are a special
-        # case - they're added in the constructor but should have lower
-        # precedence than the more-precise handlers added later.
-        # If a wildcard handler group exists, it should always be last
-        # in the list, so insert new groups just before it.
-        if self.handlers and self.handlers[-1][0].pattern == '.*$':
-            self.handlers.insert(-1, (re.compile(host_pattern), handlers))
-        else:
-            self.handlers.append((re.compile(host_pattern), handlers))
-
-        for spec in host_handlers:
-            if isinstance(spec, (tuple, list)):
-                assert len(spec) in (2, 3, 4)
-                spec = URLSpec(*spec)
-            handlers.append(spec)
-            if spec.name:
-                if spec.name in self.named_handlers:
-                    self.app_log.warning(
-                        "Multiple handlers named %s; replacing previous value",
-                        spec.name)
-                self.named_handlers[spec.name] = spec
+        self.default_router.add_handlers(host_pattern, host_handlers)
 
     def add_transform(self, transform_class):
         self.transforms.append(transform_class)
 
-    def _get_host_handlers(self, request):
-        host = request.host.lower().split(':')[0]
-        matches = []
-        for pattern, handlers in self.handlers:
-            if pattern.match(host):
-                matches.extend(handlers)
-        # Look for default host if not behind load balancer (for debugging)
-        if not matches and "X-Real-Ip" not in request.headers:
-            for pattern, handlers in self.handlers:
-                if pattern.match(self.default_host):
-                    matches.extend(handlers)
-        return matches or None
+    def _find_handler(self, request):
+        for r in self.routers:
+            handler = r.find_handler(request)
+            if handler is not None:
+                return handler
 
     def _load_ui_methods(self, methods):
         if isinstance(methods, types.ModuleType):
@@ -1771,45 +1742,22 @@ class Application(object):
         handler = None
         args = []
         kwargs = {}
-        handlers = self._get_host_handlers(request)
-        if not handlers:
-            handler = RedirectHandler(
-                self, request, url="http://" + self.default_host + "/")
-        else:
-            for spec in handlers:
-                match = spec.regex.match(request.path)
-                if match:
-                    handler = spec.handler_class(self, request, **spec.kwargs)
-                    if spec.regex.groups:
-                        # None-safe wrapper around url_unescape to handle
-                        # unmatched optional groups correctly
-                        def unquote(s):
-                            if s is None:
-                                return s
-                            return escape.url_unescape(s, encoding=None,
-                                                       plus=False)
-                        # Pass matched groups to the handler.  Since
-                        # match.groups() includes both named and unnamed groups,
-                        # we want to use either groups or groupdict but not both.
-                        # Note that args are passed as bytes so the handler can
-                        # decide what encoding to use.
 
-                        if spec.regex.groupindex:
-                            kwargs = dict(
-                                (str(k), unquote(v))
-                                for (k, v) in match.groupdict().items())
-                        else:
-                            args = [unquote(s) for s in match.groups()]
-                    break
-            if not handler:
-                if self.settings.get('default_handler_class'):
-                    handler_class = self.settings['default_handler_class']
-                    handler_args = self.settings.get(
-                        'default_handler_args', {})
-                else:
-                    handler_class = ErrorHandler
-                    handler_args = dict(status_code=404)
-                handler = handler_class(self, request, **handler_args)
+        handler_match = self._find_handler(request)
+        if handler_match is not None:
+            handler = handler_match.handler
+            args = handler_match.args
+            kwargs = handler_match.kwargs
+        else:
+            if self.settings.get('default_handler_class'):
+                handler_class = self.settings['default_handler_class']
+                handler_args = self.settings.get(
+                    'default_handler_args', {})
+            else:
+                handler_class = ErrorHandler
+                handler_args = dict(status_code=404)
+
+            handler = handler_class(self, request, **handler_args)
 
         # If template cache is disabled (usually in the debug mode),
         # re-compile templates and reload static files on every
@@ -1833,8 +1781,11 @@ class Application(object):
         They will be converted to strings if necessary, encoded as utf8,
         and url-escaped.
         """
-        if name in self.named_handlers:
-            return self.named_handlers[name].reverse(*args)
+        for router in self.routers:
+            reversed_url = router.reverse_url(name, *args)
+            if reversed_url is not None:
+                return reversed_url
+
         raise KeyError("%s not found in named urls" % name)
 
     def log_request(self, handler):
@@ -2671,90 +2622,6 @@ class _UIModuleNamespace(object):
             return self[key]
         except KeyError as e:
             raise AttributeError(str(e))
-
-
-class URLSpec(object):
-    """Specifies mappings between URLs and handlers."""
-    def __init__(self, pattern, handler, kwargs=None, name=None):
-        """Parameters:
-
-        * ``pattern``: Regular expression to be matched.  Any groups
-          in the regex will be passed in to the handler's get/post/etc
-          methods as arguments.
-
-        * ``handler_class``: `RequestHandler` subclass to be invoked.
-
-        * ``kwargs`` (optional): A dictionary of additional arguments
-          to be passed to the handler's constructor.
-
-        * ``name`` (optional): A name for this handler.  Used by
-          `Application.reverse_url`.
-        """
-        if not pattern.endswith('$'):
-            pattern += '$'
-        self.regex = re.compile(pattern)
-        assert len(self.regex.groupindex) in (0, self.regex.groups), \
-            ("groups in url regexes must either be all named or all "
-             "positional: %r" % self.regex.pattern)
-
-        if isinstance(handler, str):
-            # import the Module and instantiate the class
-            # Must be a fully qualified name (module.ClassName)
-            handler = import_object(handler)
-
-        self.handler_class = handler
-        self.kwargs = kwargs or {}
-        self.name = name
-        self._path, self._group_count = self._find_groups()
-
-    def __repr__(self):
-        return '%s(%r, %s, kwargs=%r, name=%r)' % \
-            (self.__class__.__name__, self.regex.pattern,
-             self.handler_class, self.kwargs, self.name)
-
-    def _find_groups(self):
-        """Returns a tuple (reverse string, group count) for a url.
-
-        For example: Given the url pattern /([0-9]{4})/([a-z-]+)/, this method
-        would return ('/%s/%s/', 2).
-        """
-        pattern = self.regex.pattern
-        if pattern.startswith('^'):
-            pattern = pattern[1:]
-        if pattern.endswith('$'):
-            pattern = pattern[:-1]
-
-        if self.regex.groups != pattern.count('('):
-            # The pattern is too complicated for our simplistic matching,
-            # so we can't support reversing it.
-            return (None, None)
-
-        pieces = []
-        for fragment in pattern.split('('):
-            if ')' in fragment:
-                paren_loc = fragment.index(')')
-                if paren_loc >= 0:
-                    pieces.append('%s' + fragment[paren_loc + 1:])
-            else:
-                pieces.append(fragment)
-
-        return (''.join(pieces), self.regex.groups)
-
-    def reverse(self, *args):
-        assert self._path is not None, \
-            "Cannot reverse url regex " + self.regex.pattern
-        assert len(args) == self._group_count, "required number of arguments "\
-            "not found"
-        if not len(args):
-            return self._path
-        converted_args = []
-        for a in args:
-            if not isinstance(a, (unicode_type, bytes_type)):
-                a = str(a)
-            converted_args.append(escape.url_escape(utf8(a), plus=False))
-        return self._path % tuple(converted_args)
-
-url = URLSpec
 
 
 if hasattr(hmac, 'compare_digest'):  # python 3.3

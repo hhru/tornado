@@ -38,6 +38,7 @@ TEST_MODULES = [
     'tornado.test.log_test',
     'tornado.test.options_test',
     'tornado.test.process_test',
+    'tornado.test.routing_test',
     'tornado.test.simple_httpclient_test',
     'tornado.test.stack_context_test',
     'tornado.test.template_test',
