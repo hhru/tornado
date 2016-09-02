@@ -1,3 +1,10 @@
+tornado (3.2.2+hh8) unstable; urgency=low
+
+  * HH-62399 update version in setup.py
+  * HH-62399 add unittest for libcurl < 7.21.5 bug
+
+ -- Automated Build <an.sumin@hh.ru>  Fri, 02 Sep 2016 13:11:45 +0300
+
 tornado (3.2.2+hh7) unstable; urgency=low
 
   * Bump version up to 3.2.2+hh7
