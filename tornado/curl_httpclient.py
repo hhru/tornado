@@ -415,15 +415,11 @@ def _curl_setup_request(curl, request, buffer, headers):
                 'Body must not be empty for "%s" request'
                 % request.method)
 
-        request_buffer = BytesIO(utf8(request.body))
-        curl.setopt(pycurl.READFUNCTION, request_buffer.read)
         if request.method == "POST":
-            def ioctl(cmd):
-                if cmd == curl.IOCMD_RESTARTREAD:
-                    request_buffer.seek(0)
-            curl.setopt(pycurl.IOCTLFUNCTION, ioctl)
-            curl.setopt(pycurl.POSTFIELDSIZE, len(request.body))
+            curl.setopt(curl.POSTFIELDS, request.body)
         else:
+            request_buffer = BytesIO(utf8(request.body))
+            curl.setopt(pycurl.READFUNCTION, request_buffer.read)
             curl.setopt(pycurl.INFILESIZE, len(request.body))
     elif request.method == "GET":
         if request.body is not None:
