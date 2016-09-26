@@ -6,6 +6,7 @@ Build-Depends:
   python,
   python-setuptools,
   python-support,
+  python-pycurl (>= 7.19.3-0ubuntu3+hh1),
   debhelper (>= 8),
   python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
 Standards-Version: 3.9.3
@@ -16,7 +17,7 @@ Architecture: all
 Depends:
   ${python:Depends}, 
   python-pkg-resources,
-  python-pycurl,
+  python-pycurl (>= 7.19.3-0ubuntu3+hh1),
   python-daemon,
   python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
 Recommends:
