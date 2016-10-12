@@ -1,3 +1,9 @@
+tornado (3.2.2+hh9) unstable; urgency=low
+
+  * HH-62743 add setting percentage_of_readfunction_posts
+
+ -- Automated Build <a.kapitonenko@hh.ru>  Wed, 12 Oct 2016 10:28:39 +0300
+
 tornado (3.2.2+hh8) unstable; urgency=low
 
   * HH-62399 update version in setup.py
