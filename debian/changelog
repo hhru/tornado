@@ -1,3 +1,9 @@
+tornado (3.2.2+hh10) unstable; urgency=low
+
+  * Bump version up to 3.2.2+hh10
+
+ -- Automated Build <a.kapitonenko@hh.ru>  Wed, 12 Oct 2016 17:15:13 +0300
+
 tornado (3.2.2+hh9) unstable; urgency=low
 
   * HH-62743 add setting percentage_of_readfunction_posts
