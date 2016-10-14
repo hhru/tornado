@@ -1,3 +1,9 @@
+tornado (3.2.2+hh11) unstable; urgency=low
+
+  * HH-63430 remove setting send_post_fields_percentage
+
+ -- Automated Build <a.kapitonenko@hh.ru>  Fri, 14 Oct 2016 17:05:11 +0300
+
 tornado (3.2.2+hh10) unstable; urgency=low
 
   * Bump version up to 3.2.2+hh10
