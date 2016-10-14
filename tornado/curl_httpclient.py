@@ -27,7 +27,6 @@ import time
 from tornado import httputil
 from tornado import ioloop
 from tornado import stack_context
-import tornado.options
 from tornado.options import options
 
 from tornado.escape import utf8, native_str
@@ -40,9 +39,6 @@ except ImportError:
     from cStringIO import StringIO as BytesIO  # py2
 
 curl_log = logging.getLogger('tornado.curl_httpclient')
-post_data_send_type_log = logging.getLogger('tornado.post_data_send_type_log')
-
-tornado.options.define('percentage_of_readfunction_posts', default=100, type=int)
 
 
 class CurlAsyncHTTPClient(AsyncHTTPClient):
@@ -246,11 +242,6 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
     def _finish(self, curl, curl_error=None, curl_message=None):
         info = curl.info
         curl.info = None
-        if curl.type_of_post_data != "not_post":
-            post_data_send_type_log.info("Type of post data: %s Request time: %s Size: %s",
-                                         curl.type_of_post_data,
-                                         curl.getinfo(pycurl.TOTAL_TIME),
-                                         curl.getinfo(pycurl.SIZE_UPLOAD))
         self._multi.remove_handle(curl)
         self._free_list.append(curl)
         buffer = info["buffer"]
@@ -305,7 +296,6 @@ def _curl_create():
 
 def _curl_setup_request(curl, request, buffer, headers):
     curl.setopt(pycurl.URL, native_str(request.url))
-    curl.type_of_post_data = "not_post"
 
     # libcurl's magic "Expect: 100-continue" behavior causes delays
     # with servers that don't support it (which include, among others,
@@ -427,22 +417,12 @@ def _curl_setup_request(curl, request, buffer, headers):
                 'Body must not be empty for "%s" request'
                 % request.method)
 
-        if request.method == "POST" and request.start_time * 1000 % 100 >= options.percentage_of_readfunction_posts:
-            curl.type_of_post_data = "post_fields"
+        if request.method == "POST":
             curl.setopt(pycurl.POSTFIELDS, utf8(request.body))
         else:
             request_buffer = BytesIO(utf8(request.body))
             curl.setopt(pycurl.READFUNCTION, request_buffer.read)
-            if request.method == "POST":
-                curl.type_of_post_data = "read_function"
-
-                def ioctl(cmd):
-                    if cmd == curl.IOCMD_RESTARTREAD:
-                        request_buffer.seek(0)
-                curl.setopt(pycurl.IOCTLFUNCTION, ioctl)
-                curl.setopt(pycurl.POSTFIELDSIZE, len(request.body))
-            else:
-                curl.setopt(pycurl.INFILESIZE, len(request.body))
+            curl.setopt(pycurl.INFILESIZE, len(request.body))
     elif request.method == "GET":
         if request.body is not None:
             raise AssertionError('Body must be empty for GET request')
