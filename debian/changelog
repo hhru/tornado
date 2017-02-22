@@ -1,3 +1,9 @@
+tornado (3.2.2+hh12) unstable; urgency=low
+
+  * HH-67007 log headers decoding exception
+
+ -- Automated Build <an.sumin@hh.ru>  Wed, 22 Feb 2017 13:49:38 +0300
+
 tornado (3.2.2+hh11) unstable; urgency=low
 
   * HH-63430 remove setting send_post_fields_percentage
