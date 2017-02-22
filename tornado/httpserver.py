@@ -304,6 +304,7 @@ class HTTPConnection(object):
                         decoded_headers = data.decode(enc)
                         break
                     except UnicodeDecodeError:
+                        gen_log.exception('Exception during headers decoding')
                         continue
 
                 if decoded_headers is None:
