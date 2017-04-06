@@ -1,3 +1,9 @@
+tornado (3.2.2+hh13) unstable; urgency=medium
+
+  * HH-67908 change SO_REUSEADDR on SO_REUSEPORT for all sockets
+
+ -- Automated Build <a.kapitonenko@hh.ru>  Thu, 06 Apr 2017 14:42:17 +0300
+
 tornado (3.2.2+hh12) unstable; urgency=low
 
   * HH-67007 log headers decoding exception
