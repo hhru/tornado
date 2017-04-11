@@ -89,6 +89,7 @@ def bind_sockets(port, address=None, family=socket.AF_UNSPEC, backlog=128, flags
         set_close_exec(sock.fileno())
         if os.name != 'nt':
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if af == socket.AF_INET6:
             # On linux, ipv6 sockets accept ipv4 too by default,
             # but this makes it impossible to bind to both
