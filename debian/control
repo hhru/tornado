@@ -3,26 +3,32 @@ Maintainer: Facebook <python-tornado@googlegroups.com>
 Section: python
 Priority: optional
 Build-Depends:
-  python,
-  python-dev,
-  build-essential,
+  debhelper (>= 9),
+  python-all,
+  python3-all,
+  dh-python,
   python-setuptools,
-  python-support,
-  python-pycurl (>= 7.19.5.3-1ubuntu1+hh1),
-  debhelper (>= 8),
+  python3-setuptools,
+  python-pycurl,
+  python3-pycurl,
   python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
-Standards-Version: 3.9.3
-X-Python-Version: >= 2.6
+Standards-Version: 3.9.5
+X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.4
 
 Package: python-tornado
 Architecture: all
 Depends:
-  ${python:Depends}, 
-  python-pkg-resources,
-  python-pycurl (>= 7.19.5.3-1ubuntu1+hh1),
-  python-daemon,
+  ${python:Depends},
+  python,
+  python-pycurl,
   python-backports.ssl-match-hostname (>= 3.4.0.2-1~hh),
-Suggests: 
-Provides:
-  ${python:Provides}
 Description: Tornado
+
+Package: python3-tornado
+Architecture: all
+Depends:
+  ${python3:Depends},
+  python3,
+  python3-pycurl,
+Description: Tornado for Python 3
