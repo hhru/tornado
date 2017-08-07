@@ -37,6 +37,7 @@ from tornado.concurrent import TracebackFuture
 from tornado.escape import utf8
 from tornado import httputil, stack_context
 from tornado.ioloop import IOLoop
+from tornado.log import gen_log
 from tornado.util import Configurable
 
 
@@ -200,6 +201,8 @@ class AsyncHTTPClient(Configurable):
 
         def handle_response(response):
             if response.error:
+                if response.code == 599:
+                    gen_log.info('request to %s failed with 599, curl time info: %s', request.url, response.time_info)
                 future.set_exception(response.error)
             else:
                 future.set_result(response)
