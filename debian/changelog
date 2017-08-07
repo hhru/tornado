@@ -1,3 +1,9 @@
+tornado (3.2.2+hh16) unstable; urgency=medium
+
+  * HH-71416 log time info for 599 responses
+
+ -- Automated Build <an.sumin@hh.ru>  Mon, 07 Aug 2017 13:49:33 +0300
+
 tornado (3.2.2+hh15) unstable; urgency=medium
 
   * HH-71518 build python3 deb package
