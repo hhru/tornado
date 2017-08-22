@@ -146,13 +146,10 @@ class RequestHandler(object):
     _template_loader_lock = threading.Lock()
     _remove_control_chars_regex = re.compile(r"[\x00-\x08\x0e-\x1f]")
 
-    def __init__(self, application, request, logger=None, **kwargs):
+    def __init__(self, application, request, **kwargs):
         super(RequestHandler, self).__init__()
 
         self.application = application
-        self.gen_log = logger if logger is not None else gen_log
-        self.app_log = logger if logger is not None else app_log
-        self.access_log = logger if logger is not None else access_log
         self.request = request
         self._headers_written = False
         self._finished = False
@@ -904,7 +901,7 @@ class RequestHandler(object):
         Additional keyword arguments are passed through to `write_error`.
         """
         if self._headers_written:
-            self.gen_log.error("Cannot send error response after headers written")
+            gen_log.error("Cannot send error response after headers written")
             if not self._finished:
                 self.finish()
             return
@@ -919,7 +916,7 @@ class RequestHandler(object):
         try:
             self.write_error(status_code, **kwargs)
         except Exception:
-            self.app_log.error("Uncaught exception in write_error", exc_info=True)
+            app_log.error("Uncaught exception in write_error", exc_info=True)
         if not self._finished:
             self.finish()
 
@@ -1253,8 +1250,8 @@ class RequestHandler(object):
                 return callback(*args, **kwargs)
             except Exception as e:
                 if self._headers_written:
-                    self.app_log.error("Exception after headers written",
-                                       exc_info=True)
+                    app_log.error("Exception after headers written",
+                                  exc_info=True)
                 else:
                     self._handle_request_exception(e)
         return wrapper
@@ -1408,7 +1405,7 @@ class RequestHandler(object):
             return
         if isinstance(e, HTTPError):
             if e.status_code not in httputil.responses and not e.reason:
-                self.gen_log.error("Bad HTTP status code: %d", e.status_code)
+                gen_log.error("Bad HTTP status code: %d", e.status_code)
                 self.send_error(500, exc_info=sys.exc_info())
             else:
                 self.send_error(e.status_code, exc_info=sys.exc_info())
@@ -1430,10 +1427,10 @@ class RequestHandler(object):
                 format = "%d %s: " + value.log_message
                 args = ([value.status_code, self._request_summary()] +
                         list(value.args))
-                self.gen_log.warning(format, *args)
+                gen_log.warning(format, *args)
         else:
-            self.app_log.error("Uncaught exception %s\n%r", self._request_summary(),
-                               self.request, exc_info=(typ, value, tb))
+            app_log.error("Uncaught exception %s\n%r", self._request_summary(),
+                          self.request, exc_info=(typ, value, tb))
 
     def _ui_module(self, name, module):
         def render(*args, **kwargs):
@@ -1715,7 +1712,7 @@ class Application(object):
             handlers.append(spec)
             if spec.name:
                 if spec.name in self.named_handlers:
-                    self.app_log.warning(
+                    app_log.warning(
                         "Multiple handlers named %s; replacing previous value",
                         spec.name)
                 self.named_handlers[spec.name] = spec
@@ -1849,11 +1846,11 @@ class Application(object):
             self.settings["log_function"](handler)
             return
         if handler.get_status() < 400:
-            log_method = handler.access_log.info
+            log_method = access_log.info
         elif handler.get_status() < 500:
-            log_method = handler.access_log.warning
+            log_method = access_log.warning
         else:
-            log_method = handler.access_log.error
+            log_method = access_log.error
         request_time = 1000.0 * handler.request.request_time()
         log_method("%d %s %.2fms", handler.get_status(),
                    handler._request_summary(), request_time)

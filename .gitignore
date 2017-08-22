@@ -4,6 +4,7 @@
 *.so
 *.class
 *~
+.pybuild/
 build/
 /dist/
 MANIFEST
@@ -15,7 +16,10 @@ MANIFEST
 /env/
 # Used in demo apps
 secrets.cfg
-/debian/python-tornado
-/debian/python-tornado.*
-/debian/python-module-stampdir
-/debian/files
+debian/python-tornado
+debian/python-tornado.*
+debian/python3-tornado
+debian/python3-tornado.*
+debian/python-module-stampdir
+debian/debhelper-build-stamp
+debian/files
