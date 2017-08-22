@@ -1,3 +1,11 @@
+tornado (3.2.2+hh17) unstable; urgency=medium
+
+  * HH-70486 up setup.py version
+  * HH-70486 fix ipv6 unittest and .gitignore
+  * HH-70486 remove logging patch
+
+ -- Automated Build <an.sumin@hh.ru>  Tue, 22 Aug 2017 12:29:48 +0300
+
 tornado (3.2.2+hh16) unstable; urgency=medium
 
   * HH-71416 log time info for 599 responses
