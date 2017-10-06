@@ -121,8 +121,6 @@ try:
     except ImportError:
         from backports_abc import isawaitable
 except ImportError:
-    if 'APPENGINE_RUNTIME' not in os.environ:
-        raise
     from types import GeneratorType
 
     def isawaitable(x):  # type: ignore
