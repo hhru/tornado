@@ -1,3 +1,15 @@
+tornado (4.5.3+hh2) unstable; urgency=medium
+
+  * HH-77482 skip some tests in docker build container
+  * HH-77220 suppress errors in tests
+  * HH-77220 use faster curl.POSTFIELDS
+  * HH-77220 add curl_httpclient and xsrf tests
+  * HH-77220 failproof headers decoding
+  * HH-77220 debianization
+  * Support coroutines compiled with cython
+
+ -- Automated Build <an.sumin@hh.ru>  Tue, 20 Mar 2018 09:13:33 +0300
+
 tornado (4.5.3+hh1) unstable; urgency=medium
 
   * Release Tornado 4.5.3
