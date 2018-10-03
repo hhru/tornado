@@ -1,3 +1,10 @@
+tornado (4.5.3+hh3) unstable; urgency=medium
+
+  * HH-83854 fix python3 deps
+  * HH-76660 add .hh-release file
+
+ -- Automated Build <an.sumin@hh.ru>  Wed, 03 Oct 2018 16:15:44 +0300
+
 tornado (4.5.3+hh2) unstable; urgency=medium
 
   * HH-77482 skip some tests in docker build container
