@@ -32,8 +32,5 @@ Description: Tornado
 Package: python3-tornado
 Architecture: all
 Depends:
-  ${python3:Depends},
   python3,
-  python3-pycurl,
-  python3-certifi,
 Description: Tornado for Python 3
