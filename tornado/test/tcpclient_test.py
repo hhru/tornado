@@ -134,7 +134,6 @@ class TCPClientTest(AsyncTestCase):
         with self.assertRaises(IOError):
             yield self.client.connect('127.0.0.1', port)
 
-    @skip('can connect to 8.8.8.8')
     def test_source_ip_fail(self):
         '''
         Fail when trying to use the source IP Address '8.8.8.8'.
@@ -151,7 +150,7 @@ class TCPClientTest(AsyncTestCase):
         '''
         self.do_test_connect(socket.AF_INET, '127.0.0.1', source_ip='127.0.0.1')
 
-    @skipIfNonUnix
+    @skip('can connect to source_port=1')
     def test_source_port_fail(self):
         '''
         Fail when trying to use source port 1.
