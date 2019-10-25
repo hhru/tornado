@@ -170,6 +170,9 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         if new_timeout >= 0:
             self._set_timeout(new_timeout)
 
+    def _handle_operation_timeout(self, curl):
+        self._finish(curl, 599, 'blah!')
+
     def _handle_force_timeout(self):
         """Called by IOLoop periodically to ask libcurl to process any
         events it may have forgotten about.
@@ -238,6 +241,8 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
                     break
 
     def _finish(self, curl, curl_error=None, curl_message=None):
+        if curl.info.get("timeout", None) is not None:
+            self.io_loop.remove_timeout(curl.info["timeout"])
         info = curl.info
         curl.info = None
         self._multi.remove_handle(curl)
@@ -313,7 +318,7 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
 
         curl.setopt(pycurl.HEADERFUNCTION,
                     functools.partial(self._curl_header_callback,
-                                      headers, request.header_callback))
+                                      headers, request.header_callback, curl))
         if request.streaming_callback:
             def write_function(chunk):
                 self.io_loop.add_callback(request.streaming_callback, chunk)
@@ -334,6 +339,13 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         curl.setopt(pycurl.MAXREDIRS, request.max_redirects)
         curl.setopt(pycurl.CONNECTTIMEOUT_MS, int(1000 * request.connect_timeout))
         curl.setopt(pycurl.TIMEOUT_MS, int(1000 * request.request_timeout))
+
+        curl.info["operation_timeout"] = request.operation_timeout
+        if request.operation_timeout is not None:
+            curl.info["timeout_func"] = functools.partial(self._handle_operation_timeout, curl)
+            curl.info["timeout"] = self.io_loop.add_timeout(self.io_loop.time() + curl.info["operation_timeout"],
+                                                            curl.info["timeout_func"])
+
         if request.user_agent:
             curl.setopt(pycurl.USERAGENT, native_str(request.user_agent))
         else:
@@ -481,7 +493,7 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         if request.prepare_curl_callback is not None:
             request.prepare_curl_callback(curl)
 
-    def _curl_header_callback(self, headers, header_callback, header_line):
+    def _curl_header_callback(self, headers, header_callback, curl, header_line):
         header_line = native_str(header_line.decode('latin1'))
         if header_callback is not None:
             self.io_loop.add_callback(header_callback, header_line)
@@ -493,6 +505,11 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
             try:
                 (__, __, reason) = httputil.parse_response_start_line(header_line)
                 header_line = "X-Http-Reason: %s" % reason
+                if curl.info.get("timeout", None) is not None and reason == "Processing":
+                    self.io_loop.remove_timeout(curl.info["timeout"])
+                    curl.info["timeout"] = self.io_loop.add_timeout(self.io_loop.time() + curl.info["operation_timeout"],
+                                                                    curl.info["timeout_func"])
+
             except httputil.HTTPInputError:
                 return
         if not header_line:

@@ -320,7 +320,7 @@ class HTTPRequest(object):
 
     def __init__(self, url, method="GET", headers=None, body=None,
                  auth_username=None, auth_password=None, auth_mode=None,
-                 connect_timeout=None, request_timeout=None,
+                 connect_timeout=None, operation_timeout=None, request_timeout=None,
                  if_modified_since=None, follow_redirects=None,
                  max_redirects=None, user_agent=None, use_gzip=None,
                  network_interface=None, streaming_callback=None,
@@ -462,6 +462,7 @@ class HTTPRequest(object):
         self.auth_password = auth_password
         self.auth_mode = auth_mode
         self.connect_timeout = connect_timeout
+        self.operation_timeout = operation_timeout
         self.request_timeout = request_timeout
         self.follow_redirects = follow_redirects
         self.max_redirects = max_redirects
