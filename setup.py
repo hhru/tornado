@@ -68,10 +68,10 @@ Fedora users should issue the following command:
 
     $ sudo dnf install gcc python-devel
 
-If you are seeing this message on OSX please read the documentation
-here:
+MacOS users should run:
 
-http://api.mongodb.org/python/current/installation.html#osx
+    $ xcode-select --install
+
 ********************************************************************
 """
 
@@ -103,7 +103,7 @@ http://api.mongodb.org/python/current/installation.html#osx
 
 kwargs = {}
 
-version = "5.0.2"
+version = "5.1.1"
 
 with open('README.rst') as f:
     kwargs['long_description'] = f.read()
@@ -161,6 +161,8 @@ setup(
             "gettext_translations/fr_FR/LC_MESSAGES/tornado_test.mo",
             "gettext_translations/fr_FR/LC_MESSAGES/tornado_test.po",
             "options_test.cfg",
+            "options_test_types.cfg",
+            "options_test_types_str.cfg",
             "static/robots.txt",
             "static/sample.xml",
             "static/sample.xml.gz",
@@ -186,6 +188,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],

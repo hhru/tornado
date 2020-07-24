@@ -21,6 +21,7 @@
 from __future__ import absolute_import, division, print_function
 
 import re
+import warnings
 
 from tornado.concurrent import (Future, future_add_done_callback,
                                 future_set_result_unless_cancelled)
@@ -280,8 +281,14 @@ class HTTP1Connection(httputil.HTTPConnection):
     def set_close_callback(self, callback):
         """Sets a callback that will be run when the connection is closed.
 
-        .. deprecated:: 4.0
-            Use `.HTTPMessageDelegate.on_connection_close` instead.
+        Note that this callback is slightly different from
+        `.HTTPMessageDelegate.on_connection_close`: The
+        `.HTTPMessageDelegate` method is called when the connection is
+        closed while recieving a message. This callback is used when
+        there is not an active delegate (for example, on the server
+        side this callback is used if the client closes the connection
+        after sending its request but before receiving all the
+        response.
         """
         self._close_callback = stack_context.wrap(callback)
 
@@ -398,6 +405,8 @@ class HTTP1Connection(httputil.HTTPConnection):
             future.exception()
         else:
             if callback is not None:
+                warnings.warn("callback argument is deprecated, use returned Future instead",
+                              DeprecationWarning)
                 self._write_callback = stack_context.wrap(callback)
             else:
                 future = self._write_future = Future()
@@ -405,7 +414,7 @@ class HTTP1Connection(httputil.HTTPConnection):
             if chunk:
                 data += self._format_chunk(chunk)
             self._pending_write = self.stream.write(data)
-            self._pending_write.add_done_callback(self._on_write_complete)
+            future_add_done_callback(self._pending_write, self._on_write_complete)
         return future
 
     def _format_chunk(self, chunk):
@@ -437,6 +446,8 @@ class HTTP1Connection(httputil.HTTPConnection):
             self._write_future.exception()
         else:
             if callback is not None:
+                warnings.warn("callback argument is deprecated, use returned Future instead",
+                              DeprecationWarning)
                 self._write_callback = stack_context.wrap(callback)
             else:
                 future = self._write_future = Future()
@@ -538,12 +549,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         # RFC 7230 section allows for both CRLF and bare LF.
         eol = data.find("\n")
         start_line = data[:eol].rstrip("\r")
-        try:
-            headers = httputil.HTTPHeaders.parse(data[eol:])
-        except ValueError:
-            # probably form split() if there was no ':' in the line
-            raise httputil.HTTPInputError("Malformed HTTP headers: %r" %
-                                          data[eol:100])
+        headers = httputil.HTTPHeaders.parse(data[eol:])
         return start_line, headers
 
     def _read_body(self, code, headers, delegate):

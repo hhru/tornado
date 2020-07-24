@@ -62,6 +62,12 @@ class BaseAsyncIOLoop(IOLoop):
             self.remove_handler(fd)
             if all_fds:
                 self.close_fd(fileobj)
+        # Remove the mapping before closing the asyncio loop. If this
+        # happened in the other order, we could race against another
+        # initialize() call which would see the closed asyncio loop,
+        # assume it was closed from the asyncio side, and do this
+        # cleanup for us, leading to a KeyError.
+        del IOLoop._ioloop_for_asyncio[self.asyncio_loop]
         self.asyncio_loop.close()
         del IOLoop._ioloop_for_asyncio[self.asyncio_loop]
 

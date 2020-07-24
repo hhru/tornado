@@ -38,6 +38,18 @@ environment:
       TOX_ENV: "py36"
       TOX_ARGS: ""
 
+    - PYTHON: "C:\\Python37"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "32"
+      TOX_ENV: "py37"
+      TOX_ARGS: "tornado.test.websocket_test"
+
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "64"
+      TOX_ENV: "py37"
+      TOX_ARGS: ""
+
 install:
   # Make sure the right python version is first on the PATH.
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -48,9 +60,9 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "python -m pip install --disable-pip-version-check --user --upgrade pip"
 
-  - "pip install tox wheel"
+  - "python -m pip install tox wheel"
 
 build: false  # Not a C# project, build stuff at the test step instead.
 
